@@ -83,9 +83,20 @@ namespace RaidMax.DiscordBot.Main
                     if (apiEvent.Type == IW4MAdminEvents.RestEvent.EventType.ALERT)
                     {
                         var guildIt = _client.Guilds.GetEnumerator();
-                        guildIt.MoveNext();
-                        // only care about the first one
-                        await guildIt.Current.DefaultChannel.SendMessageAsync(apiEvent.Message);
+                        while (guildIt.MoveNext())
+                        {
+                            if (guildIt.Current.Id == 121782130740035586)
+                            {
+                                var roleIt = guildIt.Current.Roles.GetEnumerator();
+                                IRole adminRole = null;
+                                while (roleIt.MoveNext())
+                                {
+                                    if (roleIt.Current.Name == "Administrator")
+                                        adminRole = roleIt.Current;
+                                }
+                                await guildIt.Current.DefaultChannel.SendMessageAsync($":warning: {adminRole.Mention}, {apiEvent.Message}");
+                            }
+                        }
                     }
 
                 } while ((apiEvent = await IW4MAdminEvents.GetLastestEvent()).ID != 0);

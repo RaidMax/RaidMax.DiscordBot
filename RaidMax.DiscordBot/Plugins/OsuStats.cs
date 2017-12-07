@@ -126,6 +126,38 @@ namespace RaidMax.DiscordBot.Commands
         public short epicfactor;
     }
 
+    class OsuApiScore
+    {
+        public int beatmapset_id;
+        public int beatmap_id;
+        public int approved;
+        public int total_length;
+        public int hit_length;
+        public string version;
+        public string file_md5;
+        public int diff_size;
+        public int diff_overall;
+        public int diff_approach;
+        public int diff_drain;
+        public int mode;
+        public DateTime approved_date;
+        public DateTime last_update;
+        public string artist;
+        public string title;
+        public string creator;
+        public double bpm;
+        public string source;
+        public string tags;
+        public int genre_id;
+        public int language_id;
+        public int favourite_count;
+        public int playcount;
+        public int passcount;
+        public int max_combo;
+        public float difficultyrating;
+    }
+
+
     [Group("osu"), Summary("Get info related to osu! and osu! accounts")]
     public class OsuStats : ModuleBase
     {
@@ -157,22 +189,23 @@ namespace RaidMax.DiscordBot.Commands
                 s.Append($"--------------------------------{Environment.NewLine}");
                 s.Append($"Rank       --- #{User.pp_rank:n0}{Environment.NewLine}");
                 s.Append($"Play Count --- {User.playcount:n0}{Environment.NewLine}");
-                s.Append($"Accuracy   --- {Math.Round(User.accuracy, 2)}{Environment.NewLine}");
+                s.Append($"Accuracy   --- {Math.Round(User.accuracy, 2)}%{Environment.NewLine}");
                 s.Append($"Level      --- {User.level:n}{Environment.NewLine}");
                 s.Append($"PP         --- {User.pp_raw:n0}{Environment.NewLine}");
                 s.Append($"--------------------------------{Environment.NewLine}");
 
                 int i = 0;
-                foreach(var bm in beatmapsInfo)
+                foreach (var bm in beatmapsInfo)
                 {
+                    double accuracy = GetAccuracy(BestMapsObject.First(b => b.beatmap_id == bm.beatmap_id));
                     s.Append($"[{i + 1}] - {bm.title} | {bm.creator} | {bm.version} | { GetModsString(BestMapsObject[i].enabled_mods) } {Environment.NewLine}");
-                    s.Append($"\t\t\"{ BestMapsObject[i].rank}\" - {Math.Round(BestMapsObject[i].pp, 2)}pp - ({BestMapsObject[i].count300}, {BestMapsObject[i].count100}, {BestMapsObject[i].count50}, {BestMapsObject[i].countmiss}) - {BestMapsObject[i].maxcombo} combo{Environment.NewLine}");
+                    s.Append($"\t\t\"{ BestMapsObject[i].rank}\" - {Math.Round(accuracy, 2)}% - {Math.Round(BestMapsObject[i].pp, 2)}pp - ({BestMapsObject[i].count300}, {BestMapsObject[i].count100}, {BestMapsObject[i].count50}, {BestMapsObject[i].countmiss}) - {BestMapsObject[i].maxcombo} combo{Environment.NewLine}");
                     i++;
                 }
 
                 s.Append("```");
 
-                
+
                 await Context.Channel.SendMessageAsync(s.ToString());
             }
         }
@@ -206,6 +239,11 @@ namespace RaidMax.DiscordBot.Commands
 
             string result = modString.ToString();
             return (result.Length != 0) ? "[" + result.Substring(1) + "]" : "";
+        }
+
+        private float GetAccuracy(OsuApiUserBest score)
+        {
+            return (((50f * score.count50) + (100f * score.count100) + (300f * score.count300)) / (300f * (score.countmiss + score.count50 + score.count100 + score.count300))) * 100f;
         }
 
         private async Task<List<OsuApiBeatmap>> GetOsuBeatmaps(List<int> ids, System.Net.Http.HttpClient cl)

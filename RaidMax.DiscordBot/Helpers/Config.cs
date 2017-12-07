@@ -9,8 +9,9 @@ namespace RaidMax.DiscordBot.Helpers
 {
     class Config
     {
-        public bool AnnounceVoiceChannels;
-        public List<string> SubredditList;
+        public bool AnnounceVoiceChannels { get; set; }
+        public List<string> SubredditList { get; set; }
+        public ulong NSFWChannelId { get; set; }
 
         public Config()
         {
